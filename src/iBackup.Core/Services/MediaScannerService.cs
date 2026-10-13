@@ -219,6 +219,13 @@ public sealed class MediaScannerService : IMediaScanner
     {
         var results = new List<string>();
 
+        // Enumerate real paths before probing guessed DCIM paths. On current
+        // iPhones, Internal Storage itself contains dated media directories.
+        var exposedRoots = mediaDevice.GetDirectories(@"\");
+        var internalStorage = exposedRoots.Where(path =>
+            string.Equals(Path.GetFileName(path.TrimEnd('\\', '/')), "Internal Storage", StringComparison.OrdinalIgnoreCase)).ToList();
+        if (internalStorage.Count > 0) return internalStorage;
+
         // Common locations for iOS DCIM
         string[] candidateRoots = { @"\Internal Storage\DCIM", @"\DCIM", @"Internal Storage\DCIM", "DCIM" };
         foreach (var candidate in candidateRoots)
