@@ -143,11 +143,27 @@ public sealed class BackupEngine : IBackupEngine
                 if (ShouldIncludeFile(scanned, settings))
                 {
                     candidateFiles.Add(scanned);
+                    ReportProgress(
+                        currentFileName: scanned.FileName,
+                        filesCompleted: candidateFiles.Count,
+                        totalFiles: 0,
+                        bytesCompleted: 0,
+                        totalBytes: 0,
+                        speedBytesPerSecond: 0,
+                        estimatedSecondsRemaining: null,
+                        status: BackupStatus.InProgress,
+                        isScanning: true);
                 }
             }
 
             int totalFiles = candidateFiles.Count;
             _logger.LogInformation("Scanned {Total} candidate media files matching backup criteria.", totalFiles);
+
+            if (totalFiles == 0)
+            {
+                throw new InvalidOperationException(
+                    "The iPhone photo library is accessible, but no supported photos or videos were found.");
+            }
 
             // Step 2: Pre-check candidate file sizes and disk free space
             long totalEstimatedBytes = candidateFiles.Sum(f => f.FileSize);
@@ -208,7 +224,7 @@ public sealed class BackupEngine : IBackupEngine
 
                 // Transfer file with chunk-level progress
                 long fileBytesSoFar = 0;
-                var progressReporter = new Progress<long>(chunkWritten =>
+                var progressReporter = new InlineProgress(chunkWritten =>
                 {
                     long delta = chunkWritten - fileBytesSoFar;
                     fileBytesSoFar = chunkWritten;
@@ -625,7 +641,8 @@ public sealed class BackupEngine : IBackupEngine
         long totalBytes,
         double speedBytesPerSecond,
         double? estimatedSecondsRemaining,
-        BackupStatus status)
+        BackupStatus status,
+        bool isScanning = false)
     {
         var progress = new BackupProgress(
             CurrentFileName: currentFileName,
@@ -635,7 +652,10 @@ public sealed class BackupEngine : IBackupEngine
             TotalBytes: totalBytes,
             CurrentSpeedBytesPerSecond: speedBytesPerSecond,
             EstimatedSecondsRemaining: estimatedSecondsRemaining,
-            Status: status);
+            Status: status)
+        {
+            IsScanning = isScanning
+        };
 
         try
         {
@@ -645,5 +665,10 @@ public sealed class BackupEngine : IBackupEngine
         {
             _logger.LogDebug(ex, "Error occurred in ProgressChanged event handler.");
         }
+    }
+
+    private sealed class InlineProgress(Action<long> report) : IProgress<long>
+    {
+        public void Report(long value) => report(value);
     }
 }

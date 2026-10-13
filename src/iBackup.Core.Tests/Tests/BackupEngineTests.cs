@@ -232,4 +232,99 @@ public class BackupEngineTests
 
         result.Should().Be(Path.Combine(_tempDestination, "IMG_0001-2.HEIC"));
     }
+
+    [Fact]
+    public async Task StartBackupAsync_WhenScannerReturnsNoMedia_ShouldFailClearly()
+    {
+        var device = new DeviceInfo(
+            Udid: "test-device-empty",
+            Name: "Test iPhone",
+            Model: "iPhone",
+            IOSVersion: null,
+            TotalStorageBytes: 0,
+            UsedStorageBytes: 0,
+            IsConnected: true);
+
+        var settings = new BackupSettings
+        {
+            DeviceUdid = device.Udid,
+            DestinationPath = _tempDestination,
+            IncludePhotos = true,
+            IncludeVideos = true
+        };
+
+        _mediaScannerMock
+            .Setup(s => s.ScanMediaFilesAsync(device, It.IsAny<CancellationToken>()))
+            .Returns(ToAsyncEnumerable(Array.Empty<ScannedFile>()));
+
+        _manifestRepoMock
+            .Setup(r => r.CreateSessionAsync(device.Udid, device.Name))
+            .ReturnsAsync(new BackupSession
+            {
+                Id = 3,
+                DeviceUdid = device.Udid,
+                DeviceName = device.Name,
+                StartedAt = DateTime.UtcNow
+            });
+
+        Func<Task> act = () => _engine.StartBackupAsync(device, settings);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*no supported photos or videos*");
+
+        _manifestRepoMock.Verify(r => r.CompleteSessionAsync(
+            3,
+            BackupStatus.Failed,
+            0,
+            0,
+            0,
+            1,
+            0), Times.Once);
+
+        _fileTransferMock.Verify(t => t.TransferFileAsync(
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<IProgress<long>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task StartBackupAsync_ReportsScanningBeforeTransfer()
+    {
+        var device = new DeviceInfo("scan-device", "Test iPhone", "iPhone", null, 0, 0, true);
+        var settings = new BackupSettings
+        {
+            DeviceUdid = device.Udid,
+            DestinationPath = _tempDestination,
+            IncludePhotos = true
+        };
+        var media = new ScannedFile(
+            "/DCIM/100APPLE/IMG_1000.JPG",
+            "IMG_1000.JPG",
+            100,
+            DateTime.UtcNow,
+            null,
+            MediaType.Photo);
+
+        _mediaScannerMock
+            .Setup(s => s.ScanMediaFilesAsync(device, It.IsAny<CancellationToken>()))
+            .Returns(ToAsyncEnumerable(new[] { media }));
+        _manifestRepoMock
+            .Setup(r => r.CreateSessionAsync(device.Udid, device.Name))
+            .ReturnsAsync(new BackupSession { Id = 4, DeviceUdid = device.Udid, DeviceName = device.Name });
+        _manifestRepoMock
+            .Setup(r => r.IsFileBackedUpAsync(device.Udid, media.FileName, media.FileSize, media.CreationDate))
+            .ReturnsAsync(true);
+
+        var progress = new List<BackupProgress>();
+        _engine.ProgressChanged += (_, update) => progress.Add(update);
+
+        await _engine.StartBackupAsync(device, settings);
+
+        progress.Should().Contain(update =>
+            update.IsScanning &&
+            update.FilesCompleted == 1 &&
+            update.CurrentFileName == media.FileName);
+    }
 }

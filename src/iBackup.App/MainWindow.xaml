@@ -11,6 +11,7 @@
         <tb:TaskbarIcon
             x:Name="TrayIcon"
             ToolTipText="iBackup - iOS Media Backup"
+            IconSource="/Assets/iBackup.ico"
             LeftClickCommand="{x:Bind ShowWindowCommand}" />
 
         <NavigationView

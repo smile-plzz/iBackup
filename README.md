@@ -1,6 +1,6 @@
 # 📱 iBackup
 
-**A lightweight, native Windows desktop app that automatically backs up photos and videos from your iPhone/iPad over USB — incrementally, reliably, and without duplicates.**
+**A focused Windows desktop app for incrementally backing up iPhone and iPad photos and videos over USB without duplicates.**
 
 Plug in your cable. Your media is backed up. That's it.
 
@@ -8,11 +8,11 @@ Plug in your cable. Your media is backed up. That's it.
 
 ## ✨ Features
 
-- **🔌 Plug & Play** — Auto-detects iOS devices via USB
+- **🔌 Guided USB Connection** — Detects supported iPhones and iPads and explains trust/access problems
 - **⚡ Incremental Backup** — Only copies new files, never duplicates
 - **📁 Transparent Storage** — Files land as normal JPG/HEIC/MOV/MP4 in browsable folders
 - **🗂️ Smart Organization** — Automatically organizes by year and month
-- **🔒 Privacy-First** — No cloud, no accounts, no telemetry — everything stays local
+- **🔒 Privacy-First** — No cloud, accounts, or telemetry; everything stays local
 - **🪶 Lightweight** — Small footprint, fast startup, minimal resource usage
 - **🔔 System Tray** — Keeps the app available from the Windows notification area
 - **✅ Integrity Verification** — Optional SHA-256 verification after each transfer
@@ -40,6 +40,13 @@ Download the latest Windows x64 ZIP from [Releases](https://github.com/smile-plz
 
 The app is currently an unsigned preview, so Windows may show a SmartScreen warning. You must also have Apple Devices or iTunes installed and tap **Trust** on the unlocked iPhone/iPad when prompted.
 
+1. Extract the complete ZIP. Do not run the EXE from inside the archive.
+2. Connect the iPhone by USB, unlock it, and tap **Trust This Computer** if prompted.
+3. Choose a local or connected-drive backup folder.
+4. Press **Start Backup** and keep the iPhone screen awake during the scan and transfer.
+
+The status card distinguishes device scanning from file copying and shows actionable errors instead of treating inaccessible or empty scans as successful backups.
+
 ### Build from source
 
 ```bash
@@ -58,13 +65,15 @@ dotnet publish src/iBackup.App/iBackup.App.csproj -c Release -r win-x64 --self-c
 
 ## Current preview limitations
 
-- USB discovery and transfers require a real iPhone/iPad for end-to-end hardware verification.
+- USB behavior depends on Apple's Windows driver and the iPhone trust/lock state.
 - The preview is unsigned and ships as a portable folder rather than an MSIX installer.
 - Keep the iOS device unlocked during large transfers because WPD availability can change when the screen locks.
+- iCloud-optimized originals that are not stored on the phone may not be available through Windows USB transfer.
 
 ## 📖 Documentation
 
 - [Product Requirements Document (PRD)](docs/PRD.md)
+- [Troubleshooting and diagnostics](docs/TROUBLESHOOTING.md)
 
 ## 📄 License
 

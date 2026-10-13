@@ -1,6 +1,7 @@
 namespace iBackup.Core.Services;
 
 using System.Runtime.CompilerServices;
+using iBackup.Core.Exceptions;
 using iBackup.Core.Interfaces;
 using iBackup.Core.Models;
 using MediaDevices;
@@ -33,7 +34,8 @@ public sealed class MediaScannerService : IMediaScanner
         if (mediaDevice == null)
         {
             _logger.LogError("Media device {DeviceName} ({DeviceUdid}) not found among connected devices.", device.Name, device.Udid);
-            yield break;
+            throw new DeviceMediaAccessException(
+                "The iPhone is no longer available. Reconnect it, unlock it, and try again.");
         }
 
         try
@@ -43,7 +45,9 @@ public sealed class MediaScannerService : IMediaScanner
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to connect to device {DeviceName}.", device.Name);
-            yield break;
+            throw new DeviceMediaAccessException(
+                "Windows can see the iPhone but cannot open its photo library. Unlock the iPhone, tap Trust if prompted, and keep the screen awake.",
+                ex);
         }
 
         try
@@ -52,7 +56,8 @@ public sealed class MediaScannerService : IMediaScanner
             if (dcimRoots.Count == 0)
             {
                 _logger.LogWarning("No DCIM directory found on device {DeviceName}.", device.Name);
-                yield break;
+                throw new DeviceMediaAccessException(
+                    "No accessible photo library was found. Unlock the iPhone, tap Trust This Computer, open the Photos app once, and try again. If iCloud Photos is optimized, some originals may need to download first.");
             }
 
             var dirQueue = new Queue<string>(dcimRoots);
@@ -76,7 +81,7 @@ public sealed class MediaScannerService : IMediaScanner
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogDebug(ex, "Could not list subdirectories for {CurrentDir}.", currentDir);
+                    throw new DeviceMediaAccessException("The iPhone stopped responding while listing folders. Unlock it and retry the backup.", ex);
                 }
 
                 foreach (var subDir in subDirs)
@@ -96,8 +101,7 @@ public sealed class MediaScannerService : IMediaScanner
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to enumerate files in directory {CurrentDir}.", currentDir);
-                    continue;
+                    throw new DeviceMediaAccessException("Some iPhone media could not be listed. Unlock the phone and retry; this scan was not complete.", ex);
                 }
 
                 // Index files by name without extension to identify Live Photo pairs
@@ -211,7 +215,7 @@ public sealed class MediaScannerService : IMediaScanner
             string.Equals(d.FriendlyName, device.Udid, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static List<string> FindDcimDirectories(MediaDevice mediaDevice)
+    private List<string> FindDcimDirectories(MediaDevice mediaDevice)
     {
         var results = new List<string>();
 
@@ -233,43 +237,62 @@ public sealed class MediaScannerService : IMediaScanner
             }
         }
 
-        // Fallback: check top-level directories
+        // iPhones do not expose one consistent root name through WPD. Walk a
+        // few shallow levels to support paths such as
+        // \Apple iPhone\Internal Storage\DCIM without traversing media files.
         try
         {
-            var topLevel = mediaDevice.GetDirectories(@"\");
-            foreach (var dir in topLevel)
+            var queue = new Queue<(string Path, int Depth)>();
+            queue.Enqueue((@"\", 0));
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            while (queue.Count > 0)
             {
-                string dirName = Path.GetFileName(dir);
-                if (string.Equals(dirName, "DCIM", StringComparison.OrdinalIgnoreCase))
+                var (currentPath, depth) = queue.Dequeue();
+                if (!visited.Add(currentPath) || depth > 4)
                 {
-                    results.Add(dir);
+                    continue;
                 }
-                else
+
+                string[] children;
+                try
                 {
-                    // Check subfolders of root e.g. \Internal Storage
-                    try
+                    children = mediaDevice.GetDirectories(currentPath) ?? [];
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "Could not inspect device directory {DirectoryPath}.", currentPath);
+                    continue;
+                }
+
+                foreach (var child in children)
+                {
+                    string directoryName = Path.GetFileName(child.TrimEnd('\\', '/'));
+                    if (string.Equals(directoryName, "DCIM", StringComparison.OrdinalIgnoreCase))
                     {
-                        var secondLevel = mediaDevice.GetDirectories(dir);
-                        foreach (var sub in secondLevel)
-                        {
-                            if (string.Equals(Path.GetFileName(sub), "DCIM", StringComparison.OrdinalIgnoreCase))
-                            {
-                                results.Add(sub);
-                            }
-                        }
+                        results.Add(child);
                     }
-                    catch
+                    else if (depth < 4)
                     {
-                        // Ignore
+                        queue.Enqueue((child, depth + 1));
                     }
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore
+            _logger.LogDebug(ex, "Failed while searching for the iPhone DCIM directory.");
         }
 
-        return results;
+        if (results.Count == 0)
+        {
+            // Some iOS/WPD versions expose dated media folders directly below
+            // Internal Storage rather than publishing a folder named DCIM.
+            // Scan the exposed storage tree and filter by supported media type.
+            var storageRoots = mediaDevice.GetDirectories(@"\");
+            results.AddRange(storageRoots);
+            _logger.LogInformation("No named DCIM folder; scanning {Count} exposed storage roots.", results.Count);
+        }
+        return results.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 }

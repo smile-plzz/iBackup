@@ -22,6 +22,12 @@
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </StackPanel>
 
+            <InfoBar IsOpen="{x:Bind ViewModel.IsMessageOpen, Mode=TwoWay}"
+                     Title="{x:Bind ViewModel.MessageTitle, Mode=OneWay}"
+                     Message="{x:Bind ViewModel.MessageText, Mode=OneWay}"
+                     Severity="{x:Bind ViewModel.MessageSeverity, Mode=OneWay}"
+                     IsClosable="True" />
+
             <!-- 1. Device Card -->
             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -129,13 +135,19 @@
                     CornerRadius="8"
                     Padding="20">
                 <StackPanel Spacing="16">
-                    <Grid>
-                        <TextBlock Text="Backup Status" Style="{ThemeResource BaseTextBlockStyle}" FontWeight="SemiBold" />
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Backup Status" Style="{ThemeResource BaseTextBlockStyle}" FontWeight="SemiBold" />
+                            <Border Background="{ThemeResource AccentFillColorSecondaryBrush}" CornerRadius="10" Padding="8,2">
+                                <TextBlock Text="{x:Bind ViewModel.ActivityStage, Mode=OneWay}"
+                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                            </Border>
+                        </StackPanel>
                         <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}"
-                                   HorizontalAlignment="Right"
+                                   TextWrapping="Wrap"
                                    Style="{ThemeResource BodyTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    </Grid>
+                    </StackPanel>
 
                     <!-- Progress Bar -->
                     <ProgressBar Value="{x:Bind ViewModel.ProgressPercent, Mode=OneWay}"
@@ -185,8 +197,11 @@
                         Command="{x:Bind ViewModel.StartBackupCommand}"
                         Padding="24,8">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon Glyph="&#xE768;" FontSize="16" />
-                        <TextBlock Text="Start Backup" FontWeight="SemiBold" />
+                        <ProgressRing Width="16" Height="16" IsActive="{x:Bind ViewModel.IsBackingUp, Mode=OneWay}"
+                                      Visibility="{x:Bind ViewModel.IsBackingUp, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <FontIcon Glyph="&#xE768;" FontSize="16"
+                                  Visibility="{x:Bind ViewModel.IsBackingUp, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Inverse}" />
+                        <TextBlock Text="{x:Bind ViewModel.StartButtonText, Mode=OneWay}" FontWeight="SemiBold" />
                     </StackPanel>
                 </Button>
 
@@ -225,6 +240,19 @@
                                VerticalAlignment="Center" />
                 </Grid>
             </Border>
+
+            <!-- Support and diagnostics -->
+            <Expander Header="Having trouble accessing iPhone photos?">
+                <StackPanel Spacing="10" Padding="0,8,0,4">
+                    <TextBlock Text="Unlock the iPhone, tap Trust This Computer, keep the screen awake, and confirm Apple Devices or iTunes is installed."
+                               TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Open backup folder" Command="{x:Bind ViewModel.OpenDestinationCommand}" />
+                        <Button Content="Open diagnostic logs" Command="{x:Bind ViewModel.OpenLogsCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Expander>
 
             <!-- 6. Checkbox Toggles -->
             <StackPanel Spacing="8">

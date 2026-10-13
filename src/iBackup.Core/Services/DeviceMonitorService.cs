@@ -164,9 +164,21 @@ public sealed class DeviceMonitorService : IDeviceMonitor
 
         foreach (var mediaDevice in deviceList)
         {
+            if (!IsAppleMobileDevice(mediaDevice))
+            {
+                continue;
+            }
+
             try
             {
                 string udid = ResolveDeviceUdid(mediaDevice);
+                // Do not repeatedly open and close the shared WPD connection
+                // while the scanner or transfer service owns it.
+                if (_connectedDevices.TryGetValue(udid, out var knownDevice))
+                {
+                    currentDeviceMap[udid] = knownDevice;
+                    continue;
+                }
                 string friendlyName = !string.IsNullOrWhiteSpace(mediaDevice.FriendlyName)
                     ? mediaDevice.FriendlyName
                     : (!string.IsNullOrWhiteSpace(mediaDevice.Description) ? mediaDevice.Description : "Apple iPhone");
@@ -299,6 +311,21 @@ public sealed class DeviceMonitorService : IDeviceMonitor
         }
 
         return Guid.NewGuid().ToString("N");
+    }
+
+    private static bool IsAppleMobileDevice(MediaDevice device)
+    {
+        string identity = string.Join('|',
+            device.DeviceId,
+            device.FriendlyName,
+            device.Description,
+            device.Model,
+            device.Manufacturer);
+
+        return identity.Contains("vid_05ac", StringComparison.OrdinalIgnoreCase)
+            || identity.Contains("iphone", StringComparison.OrdinalIgnoreCase)
+            || identity.Contains("ipad", StringComparison.OrdinalIgnoreCase)
+            || identity.Contains("apple", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <inheritdoc/>

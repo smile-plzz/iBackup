@@ -37,7 +37,10 @@ public sealed partial class MainWindow : Window
         if (NavView.MenuItems.FirstOrDefault() is NavigationViewItem homeItem)
         {
             NavView.SelectedItem = homeItem;
-            ContentFrame.Navigate(typeof(MainPage));
+            if (ContentFrame.CurrentSourcePageType != typeof(MainPage))
+            {
+                ContentFrame.Navigate(typeof(MainPage));
+            }
         }
     }
 

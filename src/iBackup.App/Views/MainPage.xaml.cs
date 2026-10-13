@@ -24,6 +24,7 @@ public sealed partial class MainPage : Page
     /// </summary>
     public MainPage()
     {
+        NavigationCacheMode = Microsoft.UI.Xaml.Navigation.NavigationCacheMode.Required;
         InitializeComponent();
         ViewModel = App.GetService<MainViewModel>();
         ViewModel.RequestBrowseFolder += OnRequestBrowseFolder;

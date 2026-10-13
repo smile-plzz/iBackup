@@ -22,6 +22,11 @@ public record BackupProgress(
     BackupStatus Status)
 {
     /// <summary>
+    /// Gets whether this update represents device discovery rather than file transfer.
+    /// </summary>
+    public bool IsScanning { get; init; }
+
+    /// <summary>
     /// Gets the completion percentage (0.0 to 100.0) based on bytes or processed file count.
     /// </summary>
     public double PercentComplete

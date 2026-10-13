@@ -38,6 +38,7 @@ public sealed class FileTransferService : IFileTransferService
         var stopwatch = Stopwatch.StartNew();
         long totalBytesWritten = 0;
         bool disconnectedByUs = false;
+        bool createdDestination = false;
         MediaDevice? mediaDevice = null;
 
         try
@@ -68,14 +69,11 @@ public sealed class FileTransferService : IFileTransferService
 
             // MediaDevices 2.x performs the WPD transfer asynchronously into the
             // destination stream. The stream remains owned by this service.
-            using (var destinationStream = new FileStream(
+            using (var destinationStream = new ProgressFileStream(
                 destinationPath,
-                FileMode.Create,
-                FileAccess.Write,
-                FileShare.None,
-                bufferSize: BufferSize,
-                useAsync: true))
+                progress))
             {
+                createdDestination = true;
                 await mediaDevice.DownloadFileAsync(sourcePath, destinationStream, ct);
                 await destinationStream.FlushAsync(ct);
                 totalBytesWritten = destinationStream.Length;
@@ -96,19 +94,15 @@ public sealed class FileTransferService : IFileTransferService
         {
             stopwatch.Stop();
             _logger.LogWarning("Transfer of {SourcePath} was canceled.", sourcePath);
-            CleanupPartialFile(destinationPath);
+            if (createdDestination) CleanupPartialFile(destinationPath);
 
-            return new TransferResult(
-                Success: false,
-                BytesTransferred: totalBytesWritten,
-                ErrorMessage: "The transfer operation was canceled.",
-                Duration: stopwatch.Elapsed);
+            throw;
         }
         catch (Exception ex)
         {
             stopwatch.Stop();
             _logger.LogError(ex, "Failed to transfer file {SourcePath} to {DestinationPath}.", sourcePath, destinationPath);
-            CleanupPartialFile(destinationPath);
+            if (createdDestination) CleanupPartialFile(destinationPath);
 
             return new TransferResult(
                 Success: false,
@@ -139,6 +133,28 @@ public sealed class FileTransferService : IFileTransferService
             string.Equals(d.DeviceId, deviceUdid, StringComparison.OrdinalIgnoreCase) ||
             string.Equals(d.SerialNumber, deviceUdid, StringComparison.OrdinalIgnoreCase) ||
             string.Equals(d.FriendlyName, deviceUdid, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private sealed class ProgressFileStream(string path, IProgress<long>? progress)
+        : FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, BufferSize, true)
+    {
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            base.Write(buffer, offset, count);
+            progress?.Report(Position);
+        }
+
+        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            await base.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+            progress?.Report(Position);
+        }
+
+        public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            await base.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
+            progress?.Report(Position);
+        }
     }
 
     private static void CleanupPartialFile(string destinationPath)

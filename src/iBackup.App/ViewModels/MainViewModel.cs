@@ -1,10 +1,12 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml.Controls;
 using iBackup.App.Converters;
 using iBackup.Core.Interfaces;
 using iBackup.Core.Models;
@@ -33,6 +35,24 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private string _statusText = "Waiting for device...";
+
+    [ObservableProperty]
+    private string _activityStage = "Waiting";
+
+    [ObservableProperty]
+    private string _startButtonText = "Start Backup";
+
+    [ObservableProperty]
+    private bool _isMessageOpen;
+
+    [ObservableProperty]
+    private string _messageTitle = string.Empty;
+
+    [ObservableProperty]
+    private string _messageText = string.Empty;
+
+    [ObservableProperty]
+    private InfoBarSeverity _messageSeverity = InfoBarSeverity.Informational;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(StartBackupCommand))]
@@ -73,7 +93,7 @@ public partial class MainViewModel : ObservableObject
     private string _lastBackupSummary = "No backups recorded yet.";
 
     [ObservableProperty]
-    private bool _autoBackupOnConnect = true;
+    private bool _autoBackupOnConnect;
 
     [ObservableProperty]
     private bool _minimizeToTray = true;
@@ -133,6 +153,11 @@ public partial class MainViewModel : ObservableObject
                 ConnectedDevice = device;
                 IsDeviceConnected = true;
                 StatusText = $"Connected to {device.Name}";
+                ActivityStage = "Ready";
+                ShowMessage(
+                    "iPhone ready",
+                    "Keep the iPhone unlocked and trusted while scanning and copying media.",
+                    InfoBarSeverity.Success);
                 _ = LoadDeviceSettingsAsync(device.Udid);
             }
         }
@@ -208,20 +233,40 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanStartBackup))]
     public async Task StartBackupAsync()
     {
+        if (IsBackingUp || _backupEngine.IsRunning) return;
         if (ConnectedDevice == null || string.IsNullOrWhiteSpace(DestinationPath))
         {
+            ShowMessage("Choose a backup folder", "Select a writable destination before starting the backup.", InfoBarSeverity.Warning);
             return;
         }
 
         try
         {
+            try
+            {
+                Directory.CreateDirectory(DestinationPath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+            {
+                ActivityStage = "Needs attention";
+                StatusText = "Backup folder is not available.";
+                ShowMessage(
+                    "Choose another backup folder",
+                    $"iBackup could not use “{DestinationPath}”. Select a local folder or connected drive and try again.",
+                    InfoBarSeverity.Error);
+                return;
+            }
+
             IsBackingUp = true;
             IsPaused = false;
             IsScanning = true;
+            IsMessageOpen = false;
+            ActivityStage = "Scanning";
+            StartButtonText = "Scanning...";
             ProgressPercent = 0;
-            FilesProgress = "Scanning...";
-            BytesProgress = "--";
-            EstimatedTimeRemaining = "Calculating...";
+            FilesProgress = "Looking for media";
+            BytesProgress = "Not started";
+            EstimatedTimeRemaining = "After scan";
             StatusText = $"Scanning media on {ConnectedDevice.Name}...";
 
             _backupCts = new CancellationTokenSource();
@@ -250,21 +295,32 @@ public partial class MainViewModel : ObservableObject
                 // Non-fatal
             }
 
-            await _backupEngine.StartBackupAsync(ConnectedDevice, settings, _backupCts.Token);
+            var device = ConnectedDevice;
+            var token = _backupCts.Token;
+            // WPD exposes blocking COM calls even behind async enumeration.
+            // Keep those calls off the UI thread so progress and Cancel work.
+            await Task.Run(() => _backupEngine.StartBackupAsync(device, settings, token));
         }
         catch (OperationCanceledException)
         {
+            ActivityStage = "Cancelled";
             StatusText = "Backup was cancelled.";
+            ShowMessage("Backup cancelled", "Completed copies remain in your backup folder. You can retry the remaining files.", InfoBarSeverity.Warning);
         }
         catch (Exception ex)
         {
+            ActivityStage = "Needs attention";
             StatusText = $"Backup error: {ex.Message}";
+            ShowMessage("Backup could not continue", ex.Message, InfoBarSeverity.Error);
         }
         finally
         {
             IsBackingUp = false;
             IsScanning = false;
             IsPaused = false;
+            StartButtonText = "Start Backup";
+            _backupCts?.Dispose();
+            _backupCts = null;
         }
     }
 
@@ -318,21 +374,49 @@ public partial class MainViewModel : ObservableObject
         RequestBrowseFolder?.Invoke();
     }
 
+    /// <summary>
+    /// Opens the current backup destination in File Explorer.
+    /// </summary>
+    [RelayCommand]
+    public void OpenDestination()
+    {
+        OpenFolder(DestinationPath, "The backup folder is not available yet.");
+    }
+
+    /// <summary>
+    /// Opens the local diagnostic log folder for support and troubleshooting.
+    /// </summary>
+    [RelayCommand]
+    public void OpenLogs()
+    {
+        try
+        {
+            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var logPath = Path.Combine(localAppData, "iBackup", "logs");
+            Directory.CreateDirectory(logPath);
+            OpenFolder(logPath, "The diagnostics folder could not be opened.");
+        }
+        catch (Exception ex)
+        {
+            ShowMessage("Could not open diagnostics", ex.Message, InfoBarSeverity.Error);
+        }
+    }
+
     private void OnDeviceConnected(object? sender, DeviceInfo device)
     {
         RunOnUIThread(() =>
         {
+            if (IsBackingUp) return;
             ConnectedDevice = device;
             IsDeviceConnected = true;
             StatusText = $"Connected to {device.Name}";
+            ActivityStage = "Ready";
+            ShowMessage(
+                "iPhone connected",
+                "Keep it unlocked and tap Trust This Computer if iOS asks.",
+                InfoBarSeverity.Success);
 
-            _ = LoadDeviceSettingsAsync(device.Udid);
-
-            // Auto-backup on connect if enabled
-            if (AutoBackupOnConnect && CanStartBackup)
-            {
-                _ = StartBackupAsync();
-            }
+            _ = LoadAndMaybeStartAsync(device.Udid);
         });
     }
 
@@ -340,17 +424,18 @@ public partial class MainViewModel : ObservableObject
     {
         RunOnUIThread(() =>
         {
-            if (ConnectedDevice?.Udid == udid || !IsBackingUp)
+            if (ConnectedDevice?.Udid == udid)
             {
                 ConnectedDevice = null;
                 IsDeviceConnected = false;
+                ActivityStage = "Disconnected";
                 StatusText = "Device disconnected. Waiting for device...";
+                ShowMessage("iPhone disconnected", "Reconnect the cable to continue.", InfoBarSeverity.Warning);
 
                 if (IsBackingUp)
                 {
-                    IsBackingUp = false;
-                    IsScanning = false;
-                    IsPaused = false;
+                    _backupCts?.Cancel();
+                    _backupEngine.Cancel();
                     StatusText = "Device disconnected during backup.";
                 }
             }
@@ -361,7 +446,22 @@ public partial class MainViewModel : ObservableObject
     {
         RunOnUIThread(() =>
         {
-            IsScanning = false;
+            if (!IsBackingUp) return;
+            IsScanning = progress.IsScanning;
+
+            if (progress.IsScanning)
+            {
+                ActivityStage = "Scanning";
+                StartButtonText = "Scanning...";
+                FilesProgress = $"{progress.FilesCompleted:N0} media files found";
+                BytesProgress = "Starts after scan";
+                EstimatedTimeRemaining = "After scan";
+                StatusText = $"Found {progress.FilesCompleted:N0} files. Scanning {progress.CurrentFileName}...";
+                return;
+            }
+
+            ActivityStage = "Copying";
+            StartButtonText = "Backing up...";
             ProgressPercent = progress.PercentComplete;
             FilesProgress = $"{progress.FilesCompleted:N0} / {progress.TotalFiles:N0} files";
             BytesProgress = $"{FileSizeConverter.FormatBytes(progress.BytesCompleted)} / {FileSizeConverter.FormatBytes(progress.TotalBytes)}";
@@ -393,8 +493,13 @@ public partial class MainViewModel : ObservableObject
             IsScanning = false;
             IsPaused = false;
             ProgressPercent = 100;
-            StatusText = $"Backup complete! {session.NewFiles:N0} new files backed up.";
+            ActivityStage = session.FailedFiles > 0 ? "Completed with issues" : "Complete";
+            StatusText = $"Backup complete. {session.NewFiles:N0} new files copied, {session.SkippedFiles:N0} already backed up.";
             LastBackupSummary = $"Last backup: {session.StartedAt:g} - {session.NewFiles:N0} files ({FileSizeConverter.FormatBytes(session.TotalBytes)})";
+            ShowMessage(
+                session.FailedFiles > 0 ? "Backup completed with issues" : "Backup complete",
+                $"Copied {session.NewFiles:N0}, skipped {session.SkippedFiles:N0}, failed {session.FailedFiles:N0}.",
+                session.FailedFiles > 0 ? InfoBarSeverity.Warning : InfoBarSeverity.Success);
             _ = LoadInitialStatsAsync();
         });
     }
@@ -406,8 +511,47 @@ public partial class MainViewModel : ObservableObject
             IsBackingUp = false;
             IsScanning = false;
             IsPaused = false;
+            ActivityStage = "Needs attention";
             StatusText = $"Backup failed: {ex.Message}";
+            ShowMessage("Backup failed", ex.Message, InfoBarSeverity.Error);
         });
+    }
+
+    private void ShowMessage(string title, string message, InfoBarSeverity severity)
+    {
+        MessageTitle = title;
+        MessageText = message;
+        MessageSeverity = severity;
+        IsMessageOpen = true;
+    }
+
+    private async Task LoadAndMaybeStartAsync(string udid)
+    {
+        await LoadDeviceSettingsAsync(udid);
+        if (ConnectedDevice?.Udid == udid && AutoBackupOnConnect && CanStartBackup)
+            await StartBackupAsync();
+    }
+
+    private void OpenFolder(string path, string errorMessage)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
+            {
+                ShowMessage("Folder unavailable", errorMessage, InfoBarSeverity.Warning);
+                return;
+            }
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            ShowMessage("Could not open folder", ex.Message, InfoBarSeverity.Error);
+        }
     }
 
     private void RunOnUIThread(Action action)

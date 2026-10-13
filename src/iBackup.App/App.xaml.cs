@@ -153,7 +153,7 @@ public partial class App : Application
                 services.AddSingleton<IFileTransferService, FileTransferService>();
 
                 // ViewModels (transient)
-                services.AddTransient<MainViewModel>();
+                services.AddSingleton<MainViewModel>();
                 services.AddTransient<SettingsViewModel>();
                 services.AddTransient<HistoryViewModel>();
 

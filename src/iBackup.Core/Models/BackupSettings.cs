@@ -18,7 +18,7 @@ public class BackupSettings
     /// <summary>
     /// Gets or sets a value indicating whether automatic backup should trigger when the device connects.
     /// </summary>
-    public bool AutoBackup { get; set; } = true;
+    public bool AutoBackup { get; set; }
 
     /// <summary>
     /// Gets or sets the directory organization structure for backed up files.
