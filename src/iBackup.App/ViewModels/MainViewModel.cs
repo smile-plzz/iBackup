@@ -43,6 +43,13 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _isPaused;
 
+    public string PauseResumeButtonText => IsPaused ? "Resume" : "Pause";
+
+    partial void OnIsPausedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(PauseResumeButtonText));
+    }
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(StartBackupCommand))]
     private bool _isDeviceConnected;
@@ -169,12 +176,17 @@ public partial class MainViewModel : ObservableObject
     {
         try
         {
-            var stats = await _manifestRepository.GetStatsAsync();
-            if (stats != null && stats.TotalBackups > 0)
+            if (ConnectedDevice == null)
+            {
+                return;
+            }
+
+            var stats = await _manifestRepository.GetStatsAsync(ConnectedDevice.Udid);
+            if (stats.TotalSessions > 0)
             {
                 RunOnUIThread(() =>
                 {
-                    LastBackupSummary = $"Total backups: {stats.TotalBackups:N0} | {stats.TotalFiles:N0} files ({FileSizeConverter.FormatBytes(stats.TotalBytes)})";
+                    LastBackupSummary = $"Total backups: {stats.TotalSessions:N0} | {stats.TotalBackedUpFiles:N0} files ({FileSizeConverter.FormatBytes(stats.TotalBackedUpBytes)})";
                 });
             }
         }
@@ -216,13 +228,14 @@ public partial class MainViewModel : ObservableObject
 
             var settings = new BackupSettings
             {
+                DeviceUdid = ConnectedDevice.Udid,
                 DestinationPath = DestinationPath,
                 AutoBackup = AutoBackupOnConnect,
                 OrganizationMode = FileOrganizationMode.ByYearMonth,
-                BackupPhotos = true,
-                BackupVideos = true,
-                BackupRaw = true,
-                BackupScreenshots = true,
+                IncludePhotos = true,
+                IncludeVideos = true,
+                IncludeRaw = true,
+                IncludeScreenshots = true,
                 VerifyIntegrity = true,
                 MinimizeToTray = MinimizeToTray
             };
@@ -230,7 +243,7 @@ public partial class MainViewModel : ObservableObject
             // Save device settings
             try
             {
-                await _manifestRepository.SaveDeviceSettingsAsync(ConnectedDevice.Udid, settings);
+                await _manifestRepository.SaveDeviceSettingsAsync(settings);
             }
             catch
             {
@@ -305,7 +318,7 @@ public partial class MainViewModel : ObservableObject
         RequestBrowseFolder?.Invoke();
     }
 
-    private void OnDeviceConnected(DeviceInfo device)
+    private void OnDeviceConnected(object? sender, DeviceInfo device)
     {
         RunOnUIThread(() =>
         {
@@ -323,7 +336,7 @@ public partial class MainViewModel : ObservableObject
         });
     }
 
-    private void OnDeviceDisconnected(string udid)
+    private void OnDeviceDisconnected(object? sender, string udid)
     {
         RunOnUIThread(() =>
         {
@@ -344,18 +357,18 @@ public partial class MainViewModel : ObservableObject
         });
     }
 
-    private void OnBackupProgressChanged(BackupProgress progress)
+    private void OnBackupProgressChanged(object? sender, BackupProgress progress)
     {
         RunOnUIThread(() =>
         {
             IsScanning = false;
-            ProgressPercent = progress.Percent;
-            FilesProgress = $"{progress.ProcessedFiles:N0} / {progress.TotalFiles:N0} files";
-            BytesProgress = $"{FileSizeConverter.FormatBytes(progress.ProcessedBytes)} / {FileSizeConverter.FormatBytes(progress.TotalBytes)}";
+            ProgressPercent = progress.PercentComplete;
+            FilesProgress = $"{progress.FilesCompleted:N0} / {progress.TotalFiles:N0} files";
+            BytesProgress = $"{FileSizeConverter.FormatBytes(progress.BytesCompleted)} / {FileSizeConverter.FormatBytes(progress.TotalBytes)}";
 
-            if (progress.EstimatedRemaining.HasValue)
+            if (progress.EstimatedSecondsRemaining.HasValue)
             {
-                var remaining = progress.EstimatedRemaining.Value;
+                var remaining = TimeSpan.FromSeconds(progress.EstimatedSecondsRemaining.Value);
                 EstimatedTimeRemaining = remaining.TotalHours >= 1
                     ? $"{remaining.Hours}h {remaining.Minutes}m remaining"
                     : $"{remaining.Minutes}m {remaining.Seconds}s remaining";
@@ -372,7 +385,7 @@ public partial class MainViewModel : ObservableObject
         });
     }
 
-    private void OnBackupCompleted(BackupSession session)
+    private void OnBackupCompleted(object? sender, BackupSession session)
     {
         RunOnUIThread(() =>
         {
@@ -386,7 +399,7 @@ public partial class MainViewModel : ObservableObject
         });
     }
 
-    private void OnBackupFailed(Exception ex)
+    private void OnBackupFailed(object? sender, Exception ex)
     {
         RunOnUIThread(() =>
         {

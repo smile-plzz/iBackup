@@ -194,7 +194,7 @@
                         Padding="20,8">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon Glyph="&#xE769;" FontSize="16" />
-                        <TextBlock Text="{x:Bind ViewModel.IsPaused ? 'Resume' : 'Pause', Mode=OneWay}" />
+                        <TextBlock Text="{x:Bind ViewModel.PauseResumeButtonText, Mode=OneWay}" />
                     </StackPanel>
                 </Button>
 

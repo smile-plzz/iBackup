@@ -49,4 +49,9 @@ public class BackupSettings
     /// Gets or sets a value indicating whether file integrity should be verified using SHA-256 after transfer.
     /// </summary>
     public bool VerifyIntegrity { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether closing the window should keep the app in the system tray.
+    /// </summary>
+    public bool MinimizeToTray { get; set; } = true;
 }

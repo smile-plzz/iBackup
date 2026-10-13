@@ -57,7 +57,7 @@ public partial class SettingsViewModel : ObservableObject
     private string _appVersion = "1.0.0 (Build 2026.10)";
 
     [ObservableProperty]
-    private string _gitHubUrl = "https://github.com/ismailhossain/iBackup";
+    private string _gitHubUrl = "https://github.com/smile-plzz/iBackup";
 
     [ObservableProperty]
     private string _statusMessage = string.Empty;
@@ -96,10 +96,10 @@ public partial class SettingsViewModel : ObservableObject
 
                     OrganizationMode = settings.OrganizationMode;
                     SelectedOrganizationIndex = (int)settings.OrganizationMode;
-                    BackupPhotos = settings.BackupPhotos;
-                    BackupVideos = settings.BackupVideos;
-                    BackupRaw = settings.BackupRaw;
-                    BackupScreenshots = settings.BackupScreenshots;
+                    BackupPhotos = settings.IncludePhotos;
+                    BackupVideos = settings.IncludeVideos;
+                    BackupRaw = settings.IncludeRaw;
+                    BackupScreenshots = settings.IncludeScreenshots;
                     VerifyIntegrity = settings.VerifyIntegrity;
                     AutoBackup = settings.AutoBackup;
                     MinimizeToTray = settings.MinimizeToTray;
@@ -158,16 +158,17 @@ public partial class SettingsViewModel : ObservableObject
             {
                 DestinationPath = DestinationPath,
                 OrganizationMode = OrganizationMode,
-                BackupPhotos = BackupPhotos,
-                BackupVideos = BackupVideos,
-                BackupRaw = BackupRaw,
-                BackupScreenshots = BackupScreenshots,
+                DeviceUdid = GlobalSettingsKey,
+                IncludePhotos = BackupPhotos,
+                IncludeVideos = BackupVideos,
+                IncludeRaw = BackupRaw,
+                IncludeScreenshots = BackupScreenshots,
                 VerifyIntegrity = VerifyIntegrity,
                 AutoBackup = AutoBackup,
                 MinimizeToTray = MinimizeToTray
             };
 
-            await _manifestRepository.SaveDeviceSettingsAsync(GlobalSettingsKey, settings);
+            await _manifestRepository.SaveDeviceSettingsAsync(settings);
             StatusMessage = "Settings saved successfully.";
         }
         catch (Exception ex)

@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 using iBackup.App.Helpers;
 using iBackup.App.Views;
 
@@ -12,11 +14,14 @@ namespace iBackup.App;
 /// </summary>
 public sealed partial class MainWindow : Window
 {
+    public ICommand ShowWindowCommand { get; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="MainWindow"/> class.
     /// </summary>
     public MainWindow()
     {
+        ShowWindowCommand = new RelayCommand(() => WindowHelper.ShowWindow(this));
         InitializeComponent();
 
         Title = "iBackup";
@@ -71,8 +76,4 @@ public sealed partial class MainWindow : Window
     /// <summary>
     /// Restores the window when clicking on the system tray icon.
     /// </summary>
-    private void TrayIcon_TrayLeftMouseDown(object sender, RoutedEventArgs e)
-    {
-        WindowHelper.ShowWindow(this);
-    }
 }

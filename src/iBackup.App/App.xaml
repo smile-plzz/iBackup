@@ -4,8 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:iBackup.App"
     xmlns:converters="using:iBackup.App.Converters"
-    xmlns:tb="using:H.NotifyIcon"
-    RequestedTheme="Default">
+    xmlns:tb="using:H.NotifyIcon">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

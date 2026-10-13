@@ -331,7 +331,7 @@ public sealed class ManifestRepository : IManifestRepository
         const string sql = """
             SELECT device_udid, destination_path, auto_backup, organization_mode,
                    include_photos, include_videos, include_raw, include_screenshots,
-                   verify_integrity
+                   verify_integrity, minimize_to_tray
             FROM device_settings
             WHERE device_udid = @device_udid;
             """;
@@ -355,6 +355,7 @@ public sealed class ManifestRepository : IManifestRepository
             bool incRaw = reader.GetInt32(6) != 0;
             bool incScreenshots = reader.GetInt32(7) != 0;
             bool verifyIntegrity = reader.GetInt32(8) != 0;
+            bool minimizeToTray = reader.GetInt32(9) != 0;
 
             if (!Enum.TryParse<FileOrganizationMode>(orgModeStr, ignoreCase: true, out var orgMode))
             {
@@ -371,7 +372,8 @@ public sealed class ManifestRepository : IManifestRepository
                 IncludeVideos = incVideos,
                 IncludeRaw = incRaw,
                 IncludeScreenshots = incScreenshots,
-                VerifyIntegrity = verifyIntegrity
+                VerifyIntegrity = verifyIntegrity,
+                MinimizeToTray = minimizeToTray
             };
         }
 
@@ -388,11 +390,11 @@ public sealed class ManifestRepository : IManifestRepository
             INSERT INTO device_settings (
                 device_udid, device_name, destination_path, auto_backup,
                 organization_mode, include_photos, include_videos, include_raw,
-                include_screenshots, verify_integrity, last_seen
+                include_screenshots, verify_integrity, minimize_to_tray, last_seen
             ) VALUES (
                 @device_udid, @device_name, @destination_path, @auto_backup,
                 @organization_mode, @include_photos, @include_videos, @include_raw,
-                @include_screenshots, @verify_integrity, @last_seen
+                @include_screenshots, @verify_integrity, @minimize_to_tray, @last_seen
             )
             ON CONFLICT(device_udid) DO UPDATE SET
                 destination_path = excluded.destination_path,
@@ -403,6 +405,7 @@ public sealed class ManifestRepository : IManifestRepository
                 include_raw = excluded.include_raw,
                 include_screenshots = excluded.include_screenshots,
                 verify_integrity = excluded.verify_integrity,
+                minimize_to_tray = excluded.minimize_to_tray,
                 last_seen = excluded.last_seen;
             """;
 
@@ -421,6 +424,7 @@ public sealed class ManifestRepository : IManifestRepository
         command.Parameters.AddWithValue("@include_raw", settings.IncludeRaw ? 1 : 0);
         command.Parameters.AddWithValue("@include_screenshots", settings.IncludeScreenshots ? 1 : 0);
         command.Parameters.AddWithValue("@verify_integrity", settings.VerifyIntegrity ? 1 : 0);
+        command.Parameters.AddWithValue("@minimize_to_tray", settings.MinimizeToTray ? 1 : 0);
         command.Parameters.AddWithValue("@last_seen", DateTime.UtcNow.ToString(Iso8601Format));
 
         await command.ExecuteNonQueryAsync();

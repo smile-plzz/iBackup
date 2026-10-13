@@ -204,6 +204,7 @@ public sealed class BackupEngine : IBackupEngine
                     settings.OrganizationMode,
                     file.FileName,
                     file.CreationDate);
+                destinationPath = ResolveAvailableDestinationPath(destinationPath);
 
                 // Transfer file with chunk-level progress
                 long fileBytesSoFar = 0;
@@ -469,6 +470,38 @@ public sealed class BackupEngine : IBackupEngine
                 creationDate.Month.ToString("D2"),
                 fileName)
         };
+    }
+
+    /// <summary>
+    /// Returns a non-destructive destination path, adding a numeric suffix when a file already exists.
+    /// </summary>
+    public static string ResolveAvailableDestinationPath(string destinationPath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(destinationPath);
+
+        if (!File.Exists(destinationPath))
+        {
+            return destinationPath;
+        }
+
+        string? directory = Path.GetDirectoryName(destinationPath);
+        string baseName = Path.GetFileNameWithoutExtension(destinationPath);
+        string extension = Path.GetExtension(destinationPath);
+
+        for (int suffix = 1; suffix < int.MaxValue; suffix++)
+        {
+            string candidateName = $"{baseName}-{suffix}{extension}";
+            string candidate = string.IsNullOrEmpty(directory)
+                ? candidateName
+                : Path.Combine(directory, candidateName);
+
+            if (!File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        throw new IOException($"Could not find an available destination name for '{destinationPath}'.");
     }
 
     /// <summary>

@@ -100,7 +100,7 @@
                                 <TextBlock Text="{x:Bind DeviceName}"
                                            Style="{ThemeResource BaseTextBlockStyle}"
                                            FontWeight="SemiBold" />
-                                <TextBlock Text="{x:Bind StartedAt.ToString('f')}"
+                                <TextBlock Text="{x:Bind StartedAt}"
                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             </StackPanel>

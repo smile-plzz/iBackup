@@ -168,7 +168,8 @@ public class ManifestRepositoryTests : IDisposable
             IncludeVideos = true,
             IncludeRaw = false,
             IncludeScreenshots = true,
-            VerifyIntegrity = true
+            VerifyIntegrity = true,
+            MinimizeToTray = false
         };
 
         // Act
@@ -180,5 +181,6 @@ public class ManifestRepositoryTests : IDisposable
         loaded!.DestinationPath.Should().Be(@"D:\Photos\iPhoneBackup");
         loaded.IncludeRaw.Should().BeFalse();
         loaded.VerifyIntegrity.Should().BeTrue();
+        loaded.MinimizeToTray.Should().BeFalse();
     }
 }

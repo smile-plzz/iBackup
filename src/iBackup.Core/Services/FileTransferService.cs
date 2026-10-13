@@ -66,8 +66,8 @@ public sealed class FileTransferService : IFileTransferService
                 Directory.CreateDirectory(destinationDir);
             }
 
-            // Stream file contents from device using 64KB chunks
-            using (var sourceStream = mediaDevice.OpenRead(sourcePath))
+            // MediaDevices 2.x performs the WPD transfer asynchronously into the
+            // destination stream. The stream remains owned by this service.
             using (var destinationStream = new FileStream(
                 destinationPath,
                 FileMode.Create,
@@ -76,17 +76,10 @@ public sealed class FileTransferService : IFileTransferService
                 bufferSize: BufferSize,
                 useAsync: true))
             {
-                byte[] buffer = new byte[BufferSize];
-                int bytesRead;
-
-                while ((bytesRead = await sourceStream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct)) > 0)
-                {
-                    await destinationStream.WriteAsync(buffer.AsMemory(0, bytesRead), ct);
-                    totalBytesWritten += bytesRead;
-                    progress?.Report(totalBytesWritten);
-                }
-
+                await mediaDevice.DownloadFileAsync(sourcePath, destinationStream, ct);
                 await destinationStream.FlushAsync(ct);
+                totalBytesWritten = destinationStream.Length;
+                progress?.Report(totalBytesWritten);
             }
 
             stopwatch.Stop();
@@ -141,7 +134,7 @@ public sealed class FileTransferService : IFileTransferService
 
     private static MediaDevice? FindDevice(string deviceUdid)
     {
-        var devices = MediaDevice.GetDevices();
+        var devices = MediaDeviceManager.Instance.GetDevices() ?? [];
         return devices.FirstOrDefault(d =>
             string.Equals(d.DeviceId, deviceUdid, StringComparison.OrdinalIgnoreCase) ||
             string.Equals(d.SerialNumber, deviceUdid, StringComparison.OrdinalIgnoreCase) ||

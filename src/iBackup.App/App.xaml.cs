@@ -84,11 +84,11 @@ public partial class App : Application
             // Initialize manifest database on startup
             try
             {
-                var manifestDatabase = _host.Services.GetService<ManifestDatabase>();
-                if (manifestDatabase != null)
+                var manifestRepository = _host.Services.GetService<IManifestRepository>();
+                if (manifestRepository != null)
                 {
-                    await manifestDatabase.InitializeAsync();
-                    Log.Information("ManifestDatabase initialized successfully.");
+                    await manifestRepository.InitializeAsync();
+                    Log.Information("Manifest database initialized successfully.");
                 }
             }
             catch (Exception ex)
@@ -144,7 +144,6 @@ public partial class App : Application
             .ConfigureServices((_, services) =>
             {
                 // Core Data
-                services.AddSingleton<ManifestDatabase>();
                 services.AddSingleton<IManifestRepository, ManifestRepository>();
 
                 // Core Services

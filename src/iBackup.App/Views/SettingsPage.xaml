@@ -119,7 +119,7 @@
                                       VerticalAlignment="Center" />
                     </Grid>
 
-                    <MenuFlyoutSeparator />
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
 
                     <Grid>
                         <Grid.ColumnDefinitions>

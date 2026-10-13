@@ -203,7 +203,7 @@ public sealed class MediaScannerService : IMediaScanner
 
     private static MediaDevice? FindDevice(DeviceInfo device)
     {
-        var devices = MediaDevice.GetDevices();
+        var devices = MediaDeviceManager.Instance.GetDevices() ?? [];
         return devices.FirstOrDefault(d =>
             string.Equals(d.DeviceId, device.Udid, StringComparison.OrdinalIgnoreCase) ||
             string.Equals(d.SerialNumber, device.Udid, StringComparison.OrdinalIgnoreCase) ||

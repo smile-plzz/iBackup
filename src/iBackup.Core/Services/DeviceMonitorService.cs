@@ -152,7 +152,7 @@ public sealed class DeviceMonitorService : IDeviceMonitor
         IEnumerable<MediaDevice> deviceList;
         try
         {
-            deviceList = MediaDevice.GetDevices();
+            deviceList = MediaDeviceManager.Instance.GetDevices() ?? [];
         }
         catch (Exception ex)
         {
@@ -184,11 +184,17 @@ public sealed class DeviceMonitorService : IDeviceMonitor
                     mediaDevice.Connect();
                     try
                     {
-                        var storageInfos = mediaDevice.GetStorageInfos();
-                        if (storageInfos != null)
+                        var storageObjectIds = mediaDevice.FunctionalObjects(FunctionalCategory.Storage);
+                        if (storageObjectIds != null)
                         {
-                            foreach (var storage in storageInfos)
+                            foreach (var storageObjectId in storageObjectIds)
                             {
+                                var storage = mediaDevice.GetStorageInfo(storageObjectId);
+                                if (storage == null)
+                                {
+                                    continue;
+                                }
+
                                 long capacity = (long)storage.Capacity;
                                 long freeSpace = (long)storage.FreeSpaceInBytes;
                                 totalBytes += capacity;

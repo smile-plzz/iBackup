@@ -9,6 +9,8 @@ obj/
 # NuGet
 *.nupkg
 **/packages/*
+.nuget-packages/
+.dotnet-home/
 *.nuget.props
 *.nuget.targets
 project.lock.json
@@ -48,6 +50,7 @@ launchSettings.json
 *.appxbundle
 AppPackages/
 BundleArtifacts/
+artifacts/
 
 # OS files
 .DS_Store

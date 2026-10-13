@@ -49,7 +49,7 @@ public class BackupEngineTests
             Udid: "test-device-001",
             Name: "Ismail's iPhone",
             Model: "iPhone 16 Pro",
-            iOSVersion: "18.0",
+            IOSVersion: "18.0",
             TotalStorageBytes: 128_000_000_000,
             UsedStorageBytes: 64_000_000_000,
             IsConnected: true);
@@ -160,7 +160,7 @@ public class BackupEngineTests
             Udid: "test-device-001",
             Name: "Ismail's iPhone",
             Model: "iPhone 16 Pro",
-            iOSVersion: "18.0",
+            IOSVersion: "18.0",
             TotalStorageBytes: 128_000_000_000,
             UsedStorageBytes: 64_000_000_000,
             IsConnected: true);
@@ -218,5 +218,18 @@ public class BackupEngineTests
             0, // skipped
             1, // failed
             0), Times.Once);
+    }
+
+    [Fact]
+    public void ResolveAvailableDestinationPath_WhenNamesExist_ShouldUseNextSuffix()
+    {
+        string original = Path.Combine(_tempDestination, "IMG_0001.HEIC");
+        string firstCollision = Path.Combine(_tempDestination, "IMG_0001-1.HEIC");
+        File.WriteAllText(original, "original");
+        File.WriteAllText(firstCollision, "first collision");
+
+        string result = BackupEngine.ResolveAvailableDestinationPath(original);
+
+        result.Should().Be(Path.Combine(_tempDestination, "IMG_0001-2.HEIC"));
     }
 }

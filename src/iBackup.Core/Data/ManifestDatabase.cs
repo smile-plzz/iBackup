@@ -57,6 +57,7 @@ public static class ManifestDatabase
             include_raw INTEGER DEFAULT 1,
             include_screenshots INTEGER DEFAULT 1,
             verify_integrity INTEGER DEFAULT 0,
+            minimize_to_tray INTEGER DEFAULT 1,
             last_seen TEXT
         );
         """;
