@@ -1,0 +1,21 @@
+<Application
+    x:Class="iBackup.App.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:iBackup.App"
+    xmlns:converters="using:iBackup.App.Converters"
+    xmlns:tb="using:H.NotifyIcon"
+    RequestedTheme="Default">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Value Converters -->
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <converters:FileSizeConverter x:Key="FileSizeConverter" />
+            <converters:BackupStatusToColorConverter x:Key="BackupStatusToColorConverter" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
