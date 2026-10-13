@@ -30,6 +30,22 @@ jobs:
       - name: Publish portable app
         run: dotnet publish src/iBackup.App/iBackup.App.csproj -c Release -r win-x64 --self-contained true -p:Platform=x64 -p:WindowsAppSDKSelfContained=true --no-restore -o artifacts/win-x64
 
+      - name: Verify published app resources
+        shell: pwsh
+        run: |
+          $required = @(
+            'artifacts/win-x64/iBackup.pri',
+            'artifacts/win-x64/App.xbf',
+            'artifacts/win-x64/MainWindow.xbf',
+            'artifacts/win-x64/Views/MainPage.xbf',
+            'artifacts/win-x64/Views/HistoryPage.xbf',
+            'artifacts/win-x64/Views/SettingsPage.xbf'
+          )
+          $missing = $required | Where-Object { -not (Test-Path -LiteralPath $_) }
+          if ($missing) {
+            throw "Published app is missing required WinUI resources: $($missing -join ', ')"
+          }
+
       - name: Package
         shell: pwsh
         run: Compress-Archive -Path artifacts/win-x64/* -DestinationPath artifacts/iBackup-win-x64.zip

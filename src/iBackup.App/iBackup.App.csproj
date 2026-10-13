@@ -12,7 +12,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>12</LangVersion>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <AssemblyName>iBackup</AssemblyName>
     <Product>iBackup</Product>
     <Authors>Ismail Hossain</Authors>
@@ -30,4 +30,24 @@
   <ItemGroup>
     <ProjectReference Include="..\iBackup.Core\iBackup.Core.csproj" />
   </ItemGroup>
+
+  <!--
+    The WinUI build places the application's PRI and compiled XAML beside the
+    normal build output, but dotnet publish does not include them for this
+    unpackaged project. Without these files the process starts but cannot load
+    MainWindow.xaml, leaving no visible window.
+  -->
+  <Target Name="CopyWinUIResourcesToPublishDirectory" AfterTargets="Publish">
+    <ItemGroup>
+      <_WinUIXbf Include="$(TargetDir)**\*.xbf" />
+    </ItemGroup>
+    <Copy
+      SourceFiles="$(TargetDir)$(AssemblyName).pri"
+      DestinationFolder="$(PublishDir)"
+      Condition="Exists('$(TargetDir)$(AssemblyName).pri')" />
+    <Copy
+      SourceFiles="@(_WinUIXbf)"
+      DestinationFiles="@(_WinUIXbf->'$(PublishDir)%(RecursiveDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true" />
+  </Target>
 </Project>
