@@ -6,7 +6,7 @@
     xmlns:tb="using:H.NotifyIcon"
     Title="iBackup">
 
-    <Grid>
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <!-- System Tray Notification Icon -->
         <tb:TaskbarIcon
             x:Name="TrayIcon"
@@ -19,10 +19,19 @@
             IsBackButtonVisible="Collapsed"
             SelectionChanged="NavView_SelectionChanged"
             Loaded="NavView_Loaded"
-            PaneDisplayMode="Left"
+            PaneDisplayMode="Auto"
+            OpenPaneLength="220"
+            CompactModeThresholdWidth="0"
+            ExpandedModeThresholdWidth="1000"
             IsSettingsVisible="False">
+            <NavigationView.PaneHeader>
+                <StackPanel Orientation="Horizontal" Spacing="10" Margin="12,16,0,24">
+                    <Image Source="ms-appx:///Assets/iBackup-icon.png" Width="32" Height="32" AutomationProperties.Name="iBackup" />
+                    <TextBlock Text="iBackup" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </StackPanel>
+            </NavigationView.PaneHeader>
             <NavigationView.MenuItems>
-                <NavigationViewItem Content="Home" Tag="main">
+                <NavigationViewItem Content="Backup" Tag="main">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Home" />
                     </NavigationViewItem.Icon>

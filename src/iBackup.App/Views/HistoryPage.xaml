@@ -14,28 +14,29 @@
         <converters:BackupStatusToColorConverter x:Key="BackupStatusToColorConverter" />
     </Page.Resources>
 
-    <Grid Margin="32,24,32,32">
+    <Grid Margin="24,32,24,32" MaxWidth="800" HorizontalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <!-- Header Bar -->
-        <Grid Grid.Row="0" Margin="0,0,0,24">
+        <Grid Grid.Row="0" Margin="0,0,0,28" ColumnSpacing="16">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
             <StackPanel Spacing="4" VerticalAlignment="Center">
-                <TextBlock Text="Backup History" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold" />
-                <TextBlock Text="Review past backups, transferred file counts, and historical storage metrics."
+                <TextBlock Text="History" Style="{StaticResource PageTitleStyle}"  TextWrapping="Wrap" />
+                <TextBlock Text="Your backups, at a glance."
                            Style="{ThemeResource BodyTextBlockStyle}"
-                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"  TextWrapping="Wrap" />
             </StackPanel>
 
-            <Button HorizontalAlignment="Right"
+            <Button Grid.Column="1" HorizontalAlignment="Right"
                     VerticalAlignment="Center"
                     Command="{x:Bind ViewModel.RefreshCommand}"
                     Padding="16,8">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <FontIcon Glyph="&#xE72C;" FontSize="16" />
-                    <TextBlock Text="Refresh" />
+                    <TextBlock Text="Refresh"  TextWrapping="Wrap" />
                 </StackPanel>
             </Button>
         </Grid>
@@ -52,8 +53,8 @@
             <TextBlock Text="No backup history yet"
                        Style="{ThemeResource SubtitleTextBlockStyle}"
                        FontWeight="SemiBold"
-                       HorizontalAlignment="Center" />
-            <TextBlock Text="When you perform a backup session, its execution details and transfer statistics will appear here."
+                       HorizontalAlignment="Center"  TextWrapping="Wrap" />
+            <TextBlock Text="Your first backup will appear here, with file counts and its completion status."
                        Style="{ThemeResource BodyTextBlockStyle}"
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                        HorizontalAlignment="Center"
@@ -77,62 +78,49 @@
 
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="models:BackupSession">
-                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Padding="20,16">
-                        <Grid ColumnSpacing="20">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="2*" />
-                                <ColumnDefinition Width="1.5*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Device Icon -->
-                            <FontIcon Glyph="&#xE8EA;" FontSize="28" VerticalAlignment="Center"
-                                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                    <Border Style="{StaticResource SurfaceCardStyle}">
+                        <Grid ColumnSpacing="16" RowSpacing="16">
+                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
 
                             <!-- Device & Date Info -->
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                            <StackPanel VerticalAlignment="Center" Spacing="4">
                                 <TextBlock Text="{x:Bind DeviceName}"
                                            Style="{ThemeResource BaseTextBlockStyle}"
-                                           FontWeight="SemiBold" />
+                                           FontWeight="SemiBold"  TextWrapping="Wrap" />
                                 <TextBlock Text="{x:Bind StartedAt}"
                                            Style="{ThemeResource CaptionTextBlockStyle}"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"  TextWrapping="Wrap" />
                             </StackPanel>
 
                             <!-- File Counts -->
-                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
+                            <StackPanel Grid.Row="1" VerticalAlignment="Center" Spacing="2">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBlock Text="{x:Bind TotalFiles}" FontWeight="SemiBold" Style="{ThemeResource BodyTextBlockStyle}" />
+                                    <TextBlock Text="{x:Bind TotalFiles}" FontWeight="SemiBold" Style="{ThemeResource BodyTextBlockStyle}"  TextWrapping="Wrap" />
                                     <TextBlock Text="total files" Style="{ThemeResource BodyTextBlockStyle}"
-                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"  TextWrapping="Wrap" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBlock Text="{x:Bind NewFiles}" FontWeight="Medium" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="#107C41" />
-                                    <TextBlock Text="new" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                                    <TextBlock Text="•" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                                    <TextBlock Text="{x:Bind SkippedFiles}" FontWeight="Medium" Style="{ThemeResource CaptionTextBlockStyle}" />
-                                    <TextBlock Text="skipped" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock Text="{x:Bind NewFiles}" FontWeight="Medium" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource SystemFillColorSuccessBrush}"  TextWrapping="Wrap" />
+                                    <TextBlock Text="new" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}"  TextWrapping="Wrap" />
+                                    <TextBlock Text="•" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}"  TextWrapping="Wrap" />
+                                    <TextBlock Text="{x:Bind SkippedFiles}" FontWeight="Medium" Style="{ThemeResource CaptionTextBlockStyle}"  TextWrapping="Wrap" />
+                                    <TextBlock Text="skipped" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}"  TextWrapping="Wrap" />
                                 </StackPanel>
                             </StackPanel>
 
                             <!-- Total Size -->
-                            <StackPanel Grid.Column="3" VerticalAlignment="Center" Spacing="2">
+                            <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Spacing="2">
                                 <TextBlock Text="{x:Bind TotalBytes, Converter={StaticResource FileSizeConverter}}"
                                            FontWeight="SemiBold"
-                                           Style="{ThemeResource BodyTextBlockStyle}" />
+                                           Style="{ThemeResource BodyTextBlockStyle}"  TextWrapping="Wrap" />
                                 <TextBlock Text="Total Size"
                                            Style="{ThemeResource CaptionTextBlockStyle}"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"  TextWrapping="Wrap" />
                             </StackPanel>
 
                             <!-- Status Badge -->
-                            <Border Grid.Column="4"
+                            <Border Grid.Column="1"
                                     VerticalAlignment="Center"
                                     BorderThickness="1"
                                     BorderBrush="{x:Bind Status, Converter={StaticResource BackupStatusToColorConverter}}"
@@ -142,7 +130,7 @@
                                 <TextBlock Text="{x:Bind Status}"
                                            FontWeight="SemiBold"
                                            Style="{ThemeResource CaptionTextBlockStyle}"
-                                           Foreground="{x:Bind Status, Converter={StaticResource BackupStatusToColorConverter}}" />
+                                           Foreground="{x:Bind Status, Converter={StaticResource BackupStatusToColorConverter}}"  TextWrapping="Wrap" />
                             </Border>
                         </Grid>
                     </Border>

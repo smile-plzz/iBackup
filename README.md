@@ -1,84 +1,69 @@
-# 📱 iBackup
+# iBackup
 
-**A focused Windows desktop app for incrementally backing up iPhone and iPad photos and videos over USB without duplicates.**
+Your memories, on your own drive.
 
-Plug in your cable. Your media is backed up. That's it.
+A native Windows app for copying iPhone and iPad photos and videos over USB. Files are saved in ordinary folders, with incremental tracking so a repeat backup skips previously recorded files.
 
----
+## Download
 
-## ✨ Features
+[Download v0.1.4 for Windows x64](https://github.com/smile-plzz/iBackup/releases/tag/v0.1.4)
 
-- **🔌 Guided USB Connection** — Detects supported iPhones and iPads and explains trust/access problems
-- **⚡ Incremental Backup** — Only copies new files, never duplicates
-- **📁 Transparent Storage** — Files land as normal JPG/HEIC/MOV/MP4 in browsable folders
-- **🗂️ Smart Organization** — Automatically organizes by year and month
-- **🔒 Privacy-First** — No cloud, accounts, or telemetry; everything stays local
-- **🪶 Lightweight** — Small footprint, fast startup, minimal resource usage
-- **🔔 System Tray** — Keeps the app available from the Windows notification area
-- **✅ Integrity Verification** — Optional SHA-256 verification after each transfer
-- **🛡️ Collision Safe** — Existing files are never overwritten; numbered copies are created instead
+This is an **unsigned preview**, not a full iPhone restore-backup tool. Extract the entire ZIP before opening `iBackup.exe`. The portable folder includes the .NET and Windows App SDK runtimes.
 
-## 🛠️ Tech Stack
+## First backup
 
-| Layer | Technology |
-|---|---|
-| Language | C# / .NET 8 |
-| UI Framework | WinUI 3 (Windows App SDK) |
-| iOS Communication | MediaDevices 2.x (Windows WPD/PTP) |
-| Database | SQLite (backup manifest tracking) |
-| Platform | Windows 10/11 (x64) |
+1. Use Windows 10 (1809+) or Windows 11, with Apple Devices or iTunes installed for USB drivers.
+2. Connect your iPhone or iPad, unlock it, and tap **Trust This Computer** if prompted.
+3. Open iBackup and choose a backup folder under **Save to**.
+4. Press **Start Backup**. Keep the device unlocked during scanning and copying.
+5. Check the completion message and your destination files.
 
-## 📋 Prerequisites
+Windows may show a SmartScreen warning because this preview is not signed. Only use a release you trust.
 
-- **Windows 10 (1809+)** or **Windows 11**
-- **iTunes** or **Apple Devices** app installed (provides USB drivers)
-- iPhone/iPad with USB cable
+## What it does
 
-## 🚀 Getting Started
+- Detects Apple devices through Windows Portable Devices.
+- Shows scanning, copying, progress, and actionable error messages.
+- Copies locally available supported photos, videos, RAW files, and screenshots.
+- Organizes files by year and month.
+- Skips files already recorded in the local backup manifest.
+- Never overwrites existing destination files; collisions get numbered names.
+- Checks copied file sizes and records destination SHA-256 hashes.
+- Keeps phone originals untouched. No account, upload, or telemetry.
+- Shows previous sessions in History and provides local diagnostic logs.
 
-Download the latest Windows x64 ZIP from [Releases](https://github.com/smile-plzz/iBackup/releases), extract it, and run `iBackup.exe`.
+The v0.1.4 interface uses softer cards, clearer typography, adaptive navigation, and simpler backup controls. It follows the Windows theme and keeps native keyboard and accessibility behavior.
 
-The app is currently an unsigned preview, so Windows may show a SmartScreen warning. You must also have Apple Devices or iTunes installed and tap **Trust** on the unlocked iPhone/iPad when prompted.
+## Preview boundaries
 
-1. Extract the complete ZIP. Do not run the EXE from inside the archive.
-2. Connect the iPhone by USB, unlock it, and tap **Trust This Computer** if prompted.
-3. Choose a local or connected-drive backup folder.
-4. Press **Start Backup** and keep the iPhone screen awake during the scan and transfer.
+- Backup preferences currently use fixed defaults: all supported media, year/month folders, and copy checks. Folder selection and automatic backup are on the Backup page.
+- Custom media filters, alternative folder layouts, Windows startup, and minimize-to-tray preferences are not wired into the application flow. Settings now explains this instead of showing ineffective controls.
+- SHA-256 is calculated on the copied file, not compared with an independently hashed source.
+- USB access depends on the driver and trust/lock state. iCloud-only originals may not be available.
+- Cancellation may wait for a blocking Windows device operation to return.
+- The connected-device check copied two sample files and skipped them on a repeat run. It is not a full-library, large-video, or interruption certification.
+- A successful historical manifest entry does not re-check whether a destination file has since been moved or deleted.
 
-The status card distinguishes device scanning from file copying and shows actionable errors instead of treating inaccessible or empty scans as successful backups.
+## Documentation
 
-### Build from source
+- [Release notes and verification](docs/RELEASE-0.1.4.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Design conventions](docs/DESIGN.md)
+- [Product requirements](docs/PRD.md), a planning document, not a list of shipped capabilities
 
-```bash
-git clone https://github.com/smile-plzz/iBackup.git
-cd iBackup
+## Development
+
+Windows, .NET 8 SDK, and the Windows build tools are required. No API keys are needed.
+
+```powershell
 dotnet restore iBackup.sln
 dotnet test src/iBackup.Core.Tests/iBackup.Core.Tests.csproj -c Release
 dotnet build src/iBackup.App/iBackup.App.csproj -c Release -p:Platform=x64
-```
-
-### Create a portable release
-
-```powershell
 dotnet publish src/iBackup.App/iBackup.App.csproj -c Release -r win-x64 --self-contained true -p:Platform=x64 -p:WindowsAppSDKSelfContained=true -o artifacts/win-x64
 ```
 
-## Current preview limitations
+The app is WinUI 3 / C#, with MediaDevices for USB access and SQLite for its manifest. See [CLAUDE.md](CLAUDE.md) for architecture and invariants. GitHub Actions tests and packages Windows x64 builds.
 
-- USB behavior depends on Apple's Windows driver and the iPhone trust/lock state.
-- The preview is unsigned and ships as a portable folder rather than an MSIX installer.
-- Keep the iOS device unlocked during large transfers because WPD availability can change when the screen locks.
-- iCloud-optimized originals that are not stored on the phone may not be available through Windows USB transfer.
+## License
 
-## 📖 Documentation
-
-- [Product Requirements Document (PRD)](docs/PRD.md)
-- [Troubleshooting and diagnostics](docs/TROUBLESHOOTING.md)
-
-## 📄 License
-
-TBD
-
----
-
-*Built with focus. One job, done right.*
+Not yet specified.

@@ -11,15 +11,15 @@
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </Page.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel MaxWidth="800" HorizontalAlignment="Stretch" Margin="32,24,32,32" Spacing="20">
+    <ScrollViewer MaxWidth="848" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled" HorizontalContentAlignment="Stretch">
+        <StackPanel HorizontalAlignment="Stretch" Margin="24,32,24,32" Spacing="16">
 
             <!-- Title Header -->
-            <StackPanel Spacing="4">
-                <TextBlock Text="iOS Media Backup" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold" />
-                <TextBlock Text="Effortlessly preserve full-resolution photos and videos from your Apple devices."
+            <StackPanel Spacing="8" Margin="0,0,0,12">
+                <TextBlock Text="Your memories. Kept close." Style="{StaticResource PageTitleStyle}" TextWrapping="Wrap" />
+                <TextBlock Text="Back up photos and videos to your own drive."
                            Style="{ThemeResource BodyTextBlockStyle}"
-                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
             </StackPanel>
 
             <InfoBar IsOpen="{x:Bind ViewModel.IsMessageOpen, Mode=TwoWay}"
@@ -29,16 +29,13 @@
                      IsClosable="True" />
 
             <!-- 1. Device Card -->
-            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="20">
+            <Border Style="{StaticResource SurfaceCardStyle}">
                 <Grid>
                     <!-- Connected State -->
                     <StackPanel Spacing="12"
                                 Visibility="{x:Bind ViewModel.IsDeviceConnected, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <Grid>
+                        <Grid RowSpacing="12">
+                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
@@ -50,23 +47,14 @@
 
                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
                                 <TextBlock Text="{x:Bind ViewModel.ConnectedDevice.Name, Mode=OneWay, FallbackValue='Apple Device'}"
-                                           Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" />
-                                <StackPanel Orientation="Horizontal" Spacing="16">
-                                    <TextBlock Text="{x:Bind ViewModel.ConnectedDevice.Model, Mode=OneWay, FallbackValue='iPhone'}"
-                                               Style="{ThemeResource CaptionTextBlockStyle}"
-                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <TextBlock Text="•" Style="{ThemeResource CaptionTextBlockStyle}"
-                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                                    <TextBlock Text="{x:Bind ViewModel.ConnectedDevice.IOSVersion, Mode=OneWay, FallbackValue='iOS'}"
-                                               Style="{ThemeResource CaptionTextBlockStyle}"
-                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                </StackPanel>
+                                           Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="Keep your device unlocked during backup." Style="{StaticResource SupportingTextStyle}" FontSize="12" />
                             </StackPanel>
 
                             <!-- Connection Status Badge -->
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
-                                <Ellipse Width="10" Height="10" Fill="#107C41" />
-                                <TextBlock Text="Connected" FontWeight="Medium" Foreground="#107C41" Style="{ThemeResource BodyTextBlockStyle}" />
+                            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+                                <Ellipse Width="10" Height="10" Fill="{ThemeResource SystemFillColorSuccessBrush}" />
+                                <TextBlock Text="Connected" FontWeight="Medium" Foreground="{ThemeResource SystemFillColorSuccessBrush}" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap" />
                             </StackPanel>
                         </Grid>
                     </StackPanel>
@@ -74,7 +62,8 @@
                     <!-- Disconnected State -->
                     <StackPanel Spacing="12"
                                 Visibility="{x:Bind ViewModel.IsDeviceConnected, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Inverse}">
-                        <Grid>
+                        <Grid RowSpacing="12">
+                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
@@ -85,15 +74,15 @@
                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                                <TextBlock Text="No device connected" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" />
-                                <TextBlock Text="Please connect your iPhone or iPad via USB cable and unlock the device."
+                                <TextBlock Text="Connect your iPhone" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="Connect by USB, unlock it, and tap Trust if asked."
                                            Style="{ThemeResource CaptionTextBlockStyle}"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                             </StackPanel>
 
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+                            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
                                 <Ellipse Width="10" Height="10" Fill="#8A8886" />
-                                <TextBlock Text="Disconnected" Foreground="{ThemeResource TextFillColorTertiaryBrush}" Style="{ThemeResource BodyTextBlockStyle}" />
+                                <TextBlock Text="Disconnected" Foreground="{ThemeResource TextFillColorTertiaryBrush}" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap" />
                             </StackPanel>
                         </Grid>
                     </StackPanel>
@@ -101,13 +90,9 @@
             </Border>
 
             <!-- 2. Destination Section -->
-            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="20">
+            <Border Style="{StaticResource SurfaceCardStyle}">
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Backup Destination" Style="{ThemeResource BaseTextBlockStyle}" FontWeight="SemiBold" />
+                    <TextBlock Text="Save to" Style="{ThemeResource BaseTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap" />
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -115,13 +100,13 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBox Text="{x:Bind ViewModel.DestinationPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                 PlaceholderText="Select folder to save media files..."
+                                 PlaceholderText="Choose a backup folder" AutomationProperties.Name="Backup folder" MinHeight="40"
                                  VerticalAlignment="Center" />
 
-                        <Button Grid.Column="1" Click="BrowseDestinationButton_Click" VerticalAlignment="Center">
+                        <Button Grid.Column="1" Click="BrowseDestinationButton_Click" VerticalAlignment="Center" MinHeight="40" AutomationProperties.Name="Choose backup folder">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xED25;" FontSize="16" />
-                                <TextBlock Text="Browse" />
+                                <TextBlock Text="Choose…" TextWrapping="Wrap" />
                             </StackPanel>
                         </Button>
                     </Grid>
@@ -129,31 +114,27 @@
             </Border>
 
             <!-- 3. Backup Status Card -->
-            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="20">
+            <Border Style="{StaticResource SurfaceCardStyle}">
                 <StackPanel Spacing="16">
                     <StackPanel Spacing="8">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Text="Backup Status" Style="{ThemeResource BaseTextBlockStyle}" FontWeight="SemiBold" />
-                            <Border Background="{ThemeResource AccentFillColorSecondaryBrush}" CornerRadius="10" Padding="8,2">
+                            <TextBlock Text="Backup" Style="{ThemeResource BaseTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="10" Padding="8,2">
                                 <TextBlock Text="{x:Bind ViewModel.ActivityStage, Mode=OneWay}"
-                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                                           Style="{ThemeResource CaptionTextBlockStyle}" TextWrapping="Wrap" />
                             </Border>
                         </StackPanel>
-                        <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}"
-                                   TextWrapping="Wrap"
+                        <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" AutomationProperties.LiveSetting="Polite"
+                                  TextWrapping="Wrap"
                                    Style="{ThemeResource BodyTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
 
                     <!-- Progress Bar -->
-                    <ProgressBar Value="{x:Bind ViewModel.ProgressPercent, Mode=OneWay}"
+                    <ProgressBar AutomationProperties.Name="Backup progress" Value="{x:Bind ViewModel.ProgressPercent, Mode=OneWay}"
                                  IsIndeterminate="{x:Bind ViewModel.IsScanning, Mode=OneWay}"
                                  Maximum="100"
-                                 Height="8"
+                                 Height="6"
                                  CornerRadius="4" />
 
                     <!-- Detailed Metrics -->
@@ -167,64 +148,64 @@
                         <!-- Files -->
                         <StackPanel Spacing="2">
                             <TextBlock Text="Files" Style="{ThemeResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                             <TextBlock Text="{x:Bind ViewModel.FilesProgress, Mode=OneWay}"
-                                       Style="{ThemeResource BodyTextBlockStyle}" FontWeight="SemiBold" />
+                                       Style="{ThemeResource BodyTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap" />
                         </StackPanel>
 
                         <!-- Bytes -->
                         <StackPanel Grid.Column="1" Spacing="2">
                             <TextBlock Text="Transferred" Style="{ThemeResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                             <TextBlock Text="{x:Bind ViewModel.BytesProgress, Mode=OneWay}"
-                                       Style="{ThemeResource BodyTextBlockStyle}" FontWeight="SemiBold" />
+                                       Style="{ThemeResource BodyTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap" />
                         </StackPanel>
 
                         <!-- Estimated Remaining -->
                         <StackPanel Grid.Column="2" Spacing="2">
-                            <TextBlock Text="Time Remaining" Style="{ThemeResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="Time left" Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                             <TextBlock Text="{x:Bind ViewModel.EstimatedTimeRemaining, Mode=OneWay}"
-                                       Style="{ThemeResource BodyTextBlockStyle}" FontWeight="SemiBold" />
+                                       Style="{ThemeResource BodyTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap" />
                         </StackPanel>
                     </Grid>
                 </StackPanel>
             </Border>
 
             <!-- 4. Action Buttons -->
-            <StackPanel Orientation="Horizontal" Spacing="12">
-                <Button Style="{ThemeResource AccentButtonStyle}"
+            <StackPanel Spacing="12">
+                <Button Style="{StaticResource PrimaryActionStyle}"
                         Command="{x:Bind ViewModel.StartBackupCommand}"
-                        Padding="24,8">
+                        MinWidth="160" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <ProgressRing Width="16" Height="16" IsActive="{x:Bind ViewModel.IsBackingUp, Mode=OneWay}"
                                       Visibility="{x:Bind ViewModel.IsBackingUp, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <FontIcon Glyph="&#xE768;" FontSize="16"
                                   Visibility="{x:Bind ViewModel.IsBackingUp, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Inverse}" />
-                        <TextBlock Text="{x:Bind ViewModel.StartButtonText, Mode=OneWay}" FontWeight="SemiBold" />
+                        <TextBlock Text="{x:Bind ViewModel.StartButtonText, Mode=OneWay}" FontWeight="SemiBold" TextWrapping="Wrap" />
                     </StackPanel>
                 </Button>
 
-                <Button Command="{x:Bind ViewModel.PauseResumeCommand}"
+                <Button Command="{x:Bind ViewModel.PauseResumeCommand}" Visibility="{x:Bind ViewModel.IsBackingUp, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                         Padding="20,8">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon Glyph="&#xE769;" FontSize="16" />
-                        <TextBlock Text="{x:Bind ViewModel.PauseResumeButtonText, Mode=OneWay}" />
+                        <TextBlock Text="{x:Bind ViewModel.PauseResumeButtonText, Mode=OneWay}" TextWrapping="Wrap" />
                     </StackPanel>
                 </Button>
 
-                <Button Command="{x:Bind ViewModel.CancelBackupCommand}"
+                <Button Command="{x:Bind ViewModel.CancelBackupCommand}" Visibility="{x:Bind ViewModel.IsBackingUp, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                         Padding="20,8">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon Glyph="&#xE711;" FontSize="16" />
-                        <TextBlock Text="Cancel" />
+                        <TextBlock Text="Cancel" TextWrapping="Wrap" />
                     </StackPanel>
                 </Button>
             </StackPanel>
 
             <!-- 5. Last Backup Summary Line -->
             <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                    CornerRadius="6"
+                    CornerRadius="12"
                     Padding="12,10">
                 <Grid ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
@@ -237,17 +218,17 @@
                                Text="{x:Bind ViewModel.LastBackupSummary, Mode=OneWay}"
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               VerticalAlignment="Center" />
+                               VerticalAlignment="Center" TextWrapping="Wrap" />
                 </Grid>
             </Border>
 
             <!-- Support and diagnostics -->
-            <Expander Header="Having trouble accessing iPhone photos?">
+            <Expander Header="Help &amp; diagnostics" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                 <StackPanel Spacing="10" Padding="0,8,0,4">
                     <TextBlock Text="Unlock the iPhone, tap Trust This Computer, keep the screen awake, and confirm Apple Devices or iTunes is installed."
-                               TextWrapping="Wrap"
+                              TextWrapping="Wrap"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    <StackPanel Orientation="Horizontal" Spacing="8">
+                    <StackPanel Spacing="8">
                         <Button Content="Open backup folder" Command="{x:Bind ViewModel.OpenDestinationCommand}" />
                         <Button Content="Open diagnostic logs" Command="{x:Bind ViewModel.OpenLogsCommand}" />
                     </StackPanel>
@@ -256,10 +237,8 @@
 
             <!-- 6. Checkbox Toggles -->
             <StackPanel Spacing="8">
-                <CheckBox Content="Auto-backup on connect"
+                <CheckBox Content="Back up automatically when connected"
                           IsChecked="{x:Bind ViewModel.AutoBackupOnConnect, Mode=TwoWay}" />
-                <CheckBox Content="Minimize to system tray"
-                          IsChecked="{x:Bind ViewModel.MinimizeToTray, Mode=TwoWay}" />
             </StackPanel>
 
         </StackPanel>

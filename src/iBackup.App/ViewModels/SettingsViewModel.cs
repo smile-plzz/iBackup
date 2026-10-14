@@ -54,7 +54,7 @@ public partial class SettingsViewModel : ObservableObject
     private bool _minimizeToTray = true;
 
     [ObservableProperty]
-    private string _appVersion = "1.0.0 (Build 2026.10)";
+    private string _appVersion = $"Version {typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3) ?? "unknown"} · Preview";
 
     [ObservableProperty]
     private string _gitHubUrl = "https://github.com/smile-plzz/iBackup";

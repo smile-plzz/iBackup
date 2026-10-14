@@ -26,7 +26,7 @@ public sealed partial class MainWindow : Window
 
         Title = "iBackup";
         WindowHelper.SetMinWindowSize(this, 600, 500);
-        WindowHelper.SetWindowSize(this, 960, 680);
+        WindowHelper.SetWindowSize(this, 1040, 840);
     }
 
     /// <summary>

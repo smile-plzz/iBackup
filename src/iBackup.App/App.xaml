@@ -11,6 +11,29 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
 
+            <!-- Shared, theme-aware presentation. Native high-contrast resources remain intact. -->
+            <CornerRadius x:Key="ControlCornerRadius">8</CornerRadius>
+            <Style x:Key="SurfaceCardStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="16" />
+                <Setter Property="Padding" Value="24" />
+            </Style>
+            <Style x:Key="PageTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource TitleTextBlockStyle}">
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+            <Style x:Key="SupportingTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+            <Style x:Key="PrimaryActionStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+                <Setter Property="MinHeight" Value="44" />
+                <Setter Property="Padding" Value="24,10" />
+                <Setter Property="CornerRadius" Value="10" />
+            </Style>
+
             <!-- Value Converters -->
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
             <converters:FileSizeConverter x:Key="FileSizeConverter" />
